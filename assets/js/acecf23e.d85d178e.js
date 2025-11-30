@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunkmy_ai_book=globalThis.webpackChunkmy_ai_book||[]).push([[1903],{1912:a=>{a.exports=JSON.parse('{"blogBasePath":"/agentic-ai-hackathon/blog","blogTitle":"Blog","authorsListPath":"/agentic-ai-hackathon/blog/authors"}')}}]);
