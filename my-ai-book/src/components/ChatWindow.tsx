@@ -1,40 +1,103 @@
 import React, { useState } from 'react';
-import styles from './ChatWindow.module.css'; 
+
+// Define the shape of a message for TypeScript
+interface Message {
+  role: 'system' | 'user' | 'bot';
+  content: string;
+}
 
 export default function ChatWindow() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [messages, setMessages] = useState<Message[]>([
     { role: 'system', content: 'Welcome to the Physical AI Assistant. Ask me anything about the course!' }
   ]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [input, setInput] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
 
+  // --- Personalization Feature ---
+  const personalizePage = async (level: string) => {
+    setMessages(prev => [...prev, { role: 'bot', content: `Rewriting page to be ${level}...` }]);
+    
+    // Type assertion to ensure we are grabbing an HTML Element
+    const contentDiv = document.querySelector('article div.markdown') as HTMLElement;
+    
+    if (!contentDiv) {
+        setMessages(prev => [...prev, { role: 'bot', content: "Error: Could not find page content to rewrite." }]);
+        return;
+    }
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/personalize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: contentDiv.innerText, level: level })
+      });
+      
+      const data = await response.json();
+      
+      // Inject the new content safely
+      contentDiv.innerHTML = data.personalized_text
+          .replace(/\n/g, '<br>')
+          .replace(/# /g, '<h1>')
+          .replace(/## /g, '<h2>');
+          
+      setMessages(prev => [...prev, { role: 'bot', content: "Page Updated!" }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'bot', content: "Error: Backend not reachable." }]);
+    }
+  };
+
+  // --- Urdu Translation Feature ---
+  const translatePage = async () => {
+    setMessages(prev => [...prev, { role: 'bot', content: "Translating page to Urdu... Please wait." }]);
+    
+    const contentDiv = document.querySelector('article div.markdown') as HTMLElement;
+    if (!contentDiv) return;
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: contentDiv.innerText })
+      });
+      
+      const data = await response.json();
+      
+      contentDiv.innerHTML = data.translated_text
+        .replace(/\n/g, '<br>')
+        .replace(/# /g, '<h1>')
+        .replace(/## /g, '<h2>');
+        
+      setMessages(prev => [...prev, { role: 'bot', content: "Translation Complete!" }]);
+    } catch (error) {
+      setMessages(prev => [...prev, { role: 'bot', content: "Error: Backend not reachable." }]);
+    }
+  };
+
+  // --- Chat Feature ---
   const sendMessage = async () => {
     if (!input.trim()) return;
 
-    const userMsg = { role: 'user', content: input };
-    setMessages([...messages, userMsg]);
+    const userMsg: Message = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
     const currentInput = input;
     setInput('');
 
     try {
-      // NOTE: We use localhost for the demo because GitHub Pages (HTTPS) 
-      // blocks requests to localhost (HTTP). 
-      // For the video, record on http://localhost:3000
       const response = await fetch('http://127.0.0.1:8000/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
             text: currentInput,
-            selected_text: "" // We will add selection logic later
+            selected_text: "" 
         })
       });
 
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'bot', content: data.answer }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'bot', content: "Error: Is the backend running? (Check console)" }]);
+      setMessages(prev => [...prev, { role: 'bot', content: "Error: Is the backend running?" }]);
     }
     setLoading(false);
   };
@@ -63,14 +126,24 @@ export default function ChatWindow() {
             {loading && <div className="message bot">Thinking...</div>}
           </div>
 
-          <div className="chat-input">
-            <input 
-              value={input} 
-              onChange={(e) => setInput(e.target.value)} 
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Ask about ROS 2..."
-            />
-            <button onClick={sendMessage}>Send</button>
+          <div className="chat-input-container">
+            {/* Action Buttons */}
+            <div className="action-buttons">
+                <button onClick={translatePage} style={{backgroundColor: '#e67e22'}}>Urdu</button>
+                <button onClick={() => personalizePage('simple')} style={{backgroundColor: '#3498db'}}>Simple</button>
+                <button onClick={() => personalizePage('advanced')} style={{backgroundColor: '#9b59b6'}}>Deep</button>
+            </div>
+
+            {/* Input Field */}
+            <div className="input-row">
+                <input 
+                value={input} 
+                onChange={(e) => setInput(e.target.value)} 
+                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                placeholder="Ask about ROS 2..."
+                />
+                <button onClick={sendMessage} className="send-btn">Send</button>
+            </div>
           </div>
         </div>
       )}
@@ -83,12 +156,18 @@ export default function ChatWindow() {
         .chat-header button { background: none; border: none; color: white; cursor: pointer; font-size: 16px; }
         .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #f9f9f9; }
         .message { max-width: 80%; padding: 10px; border-radius: 8px; font-size: 14px; line-height: 1.4; }
-        .message.system { align-self: center; background: #e0e0e0; font-style: italic; font-size: 12px; }
+        .message.system { align-self: center; background: #e0e0e0; font-style: italic; font-size: 12px; color: #555; }
         .message.user { align-self: flex-end; background: #25c2a0; color: white; }
         .message.bot { align-self: flex-start; background: #e9ecef; color: black; }
-        .chat-input { padding: 10px; border-top: 1px solid #eee; display: flex; gap: 10px; background: white; border-radius: 0 0 12px 12px; }
-        .chat-input input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
-        .chat-input button { background: #25c2a0; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+        
+        .chat-input-container { padding: 10px; border-top: 1px solid #eee; background: white; border-radius: 0 0 12px 12px; display: flex; flex-direction: column; gap: 8px; }
+        
+        .action-buttons { display: flex; gap: 5px; justify-content: space-between; }
+        .action-buttons button { flex: 1; color: white; border: none; padding: 6px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; }
+        
+        .input-row { display: flex; gap: 5px; }
+        .input-row input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; outline: none; }
+        .send-btn { background: #25c2a0; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
       `}</style>
     </div>
   );
