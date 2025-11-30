@@ -8,11 +8,24 @@ interface Message {
 }
 
 // --- BACKEND URL Configuration ---
-// Use environment variable if available, otherwise default to deployed Vercel backend
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-    ? 'http://127.0.0.1:8000' 
-    : 'https://agentic-ai-hackathon.vercel.app/api');
+// For production: Set REACT_APP_BACKEND_URL env var in Vercel
+// Default fallback: assumes backend deployed at separate Vercel project
+const getBackendUrl = () => {
+  if (process.env.REACT_APP_BACKEND_URL) {
+    return process.env.REACT_APP_BACKEND_URL;
+  }
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://127.0.0.1:8000';
+    }
+    // For production, expect backend deployed to separate Vercel project
+    // User must set REACT_APP_BACKEND_URL environment variable
+  }
+  // Fallback: try to reach backend at same origin (if both deployed together)
+  return window.location.origin;
+};
+
+const BACKEND_URL = getBackendUrl();
 
 export default function ChatWindow() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
