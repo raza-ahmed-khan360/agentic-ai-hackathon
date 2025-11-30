@@ -1,3 +1,9 @@
+---
+id: chapter5
+title: Chapter 5 — Humanoid Robotics and Locomotion
+sidebar_label: Chapter 5 — Humanoid Robotics and Locomotion
+---
+
 # **Chapter 5 — Humanoid Robotics and Locomotion**
 
 Humanoid robots aim to replicate human movement, enabling them to operate in environments designed for people. This chapter explores humanoid design principles, locomotion models, and the challenges of making AI-driven humanoids stable and responsive.

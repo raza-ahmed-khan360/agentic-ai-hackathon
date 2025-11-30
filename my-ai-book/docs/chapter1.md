@@ -1,4 +1,8 @@
-
+---
+id: chapter1
+title: Chapter 1 — The Robotic Nervous System (ROS 2)
+sidebar_label: Chapter 1 — The Robotic Nervous System (ROS 2)
+---
 
 # **Chapter 1 — The Robotic Nervous System (ROS 2)**
 

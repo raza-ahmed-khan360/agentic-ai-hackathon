@@ -1,3 +1,9 @@
+---
+id: chapter2
+title: Chapter 2 — The Digital Twin (Gazebo Simulation)
+sidebar_label: Chapter 2 — The Digital Twin (Gazebo Simulation)
+---
+
 # **Chapter 2 — The Digital Twin (Gazebo Simulation)**
 
 ---

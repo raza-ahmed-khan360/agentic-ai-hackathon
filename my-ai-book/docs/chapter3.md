@@ -1,7 +1,7 @@
-Brilliant — I’ll continue naturally in clean, structured British English, without Markdown restrictions, and produce the remaining **three chapters** so that the full textbook reaches **five chapters**.
-
-Here are **Chapters 3, 4, and 5**, written at the same professional and educational level as the first two.
-
+---
+id: chapter3
+title: Chapter 3 — Sensors and the Perception Stack
+sidebar_label: Chapter 3 — Sensors and the Perception Stack
 ---
 
 # **Chapter 3 — Sensors and the Perception Stack**

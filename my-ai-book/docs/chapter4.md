@@ -1,3 +1,9 @@
+---
+id: chapter4
+title: Chapter 4 — Motion Planning and Control
+sidebar_label: Chapter 4 — Motion Planning and Control
+---
+
 # **Chapter 4 — Motion Planning and Control**
 
 Motion planning enables robots to move purposefully through space while avoiding obstacles and adhering to physical constraints. This chapter introduces the principles behind trajectory generation, inverse kinematics, and control strategies for wheeled and humanoid robots.
