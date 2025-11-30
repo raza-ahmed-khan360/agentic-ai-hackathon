@@ -16,7 +16,7 @@ const getBackendUrl = () => {
   }
   if (typeof window !== 'undefined') {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      return 'http://127.0.0.1:8000/api';
+      return `{REACT_APP_BACKEND_URL}/api`;
     }
     // For production, expect backend deployed to separate Vercel project
     // User must set REACT_APP_BACKEND_URL environment variable
