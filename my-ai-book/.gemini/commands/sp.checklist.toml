@@ -1,0 +1,43 @@
+[commands.sp-adr]
+description = "Create an Architectural Decision Record for documentation"
+category = "documentation"
+
+[commands.sp-analyze]
+description = "Analyze documentation structure and content"
+category = "analysis"
+
+[commands.sp-checklist]
+description = "Create content checklists and requirements"
+category = "project-management"
+
+[commands.sp-clarify]
+description = "Clarify documentation scope and audience"
+category = "planning"
+
+[commands.sp-constitution]
+description = "Define or review documentation constitution"
+category = "governance"
+
+[commands.sp-git-commit-pr]
+description = "Create commits and pull requests"
+category = "version-control"
+
+[commands.sp-implement]
+description = "Implement content from specifications"
+category = "development"
+
+[commands.sp-phr]
+description = "Create Prompt History Records"
+category = "documentation"
+
+[commands.sp-plan]
+description = "Create content plans"
+category = "planning"
+
+[commands.sp-specify]
+description = "Create detailed content specifications"
+category = "planning"
+
+[commands.sp-tasks]
+description = "Create content task lists"
+category = "project-management"
