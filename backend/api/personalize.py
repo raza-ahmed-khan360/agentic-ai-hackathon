@@ -5,10 +5,10 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from qdrant_client_logic import qdrant, COLLECTION_NAME, embed_text
+from qdrant_client_logic import client
 
 def handler(request):
-    """Vercel serverless handler for /api/query - similarity search"""
+    """Vercel serverless handler for /api/personalize"""
     try:
         # Handle CORS preflight
         if request.method == "OPTIONS":
@@ -22,31 +22,28 @@ def handler(request):
             }
         
         body = json.loads(request.body) if isinstance(request.body, str) else request.body
-        question = body.get("question", "")
+        text = body.get("text", "")
+        level = body.get("level", "moderate")
         
-        if not question:
+        if not text:
             return {
                 "statusCode": 400,
-                "body": json.dumps({"error": "No question provided"})
+                "body": json.dumps({"error": "No text provided"})
             }
         
-        # Embed the question
-        vector = embed_text(question)
+        # Determine prompt based on level
+        prompt_style = "Explain simply." if level == "simple" else "Explain deeply."
         
-        # Search Qdrant
-        search_results = qdrant.search(
-            collection_name=COLLECTION_NAME,
-            query_vector=vector,
-            limit=5
+        completion = client.chat.completions.create(
+            model="gemini-2.5-flash",
+            messages=[
+                {
+                    "role": "system",
+                    "content": f"You are a tutor. {prompt_style} Return the response as valid HTML code (using <h1>, <p>, <ul>, etc). Do NOT use Markdown."
+                },
+                {"role": "user", "content": text[:6000]}
+            ]
         )
-        
-        # Extract results
-        hits = []
-        for hit in search_results:
-            if hasattr(hit, 'payload'):
-                hits.append(hit.payload)
-            elif isinstance(hit, dict):
-                hits.append(hit)
         
         return {
             "statusCode": 200,
@@ -55,13 +52,12 @@ def handler(request):
                 "Access-Control-Allow-Origin": "*",
             },
             "body": json.dumps({
-                "results": hits,
-                "count": len(hits)
+                "personalized_text": completion.choices[0].message.content
             })
         }
     
     except Exception as e:
-        print(f"Query error: {e}")
+        print(f"Personalization error: {e}")
         return {
             "statusCode": 500,
             "headers": {
@@ -69,24 +65,7 @@ def handler(request):
                 "Access-Control-Allow-Origin": "*",
             },
             "body": json.dumps({
-                "error": "Query failed",
-                "results": []
+                "error": "Personalization failed",
+                "personalized_text": "Error during personalization."
             })
         }
-from qdrant_client_logic import embed_text, qdrant, COLLECTION_NAME
-
-def handler(request):
-    body = request.json()
-    question = body.get("question")
-
-    vector = embed_text(question)
-
-    search = qdrant.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=vector,
-        limit=5
-    )
-
-    hits = [hit.payload for hit in search]
-
-    return {"results": hits}

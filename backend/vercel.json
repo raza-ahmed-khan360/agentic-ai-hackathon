@@ -1,14 +1,24 @@
 {
   "version": 2,
   "builds": [
+    { "src": "api/chat.py", "use": "@vercel/python" },
+    { "src": "api/translate.py", "use": "@vercel/python" },
+    { "src": "api/personalize.py", "use": "@vercel/python" },
+    { "src": "api/query.py", "use": "@vercel/python" },
+    { "src": "api/embed.py", "use": "@vercel/python" },
     {
       "src": "api/index.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
+    { "src": "/api/chat", "dest": "api/chat.py" },
+    { "src": "/api/translate", "dest": "api/translate.py" },
+    { "src": "/api/personalize", "dest": "api/personalize.py" },
+    { "src": "/api/query", "dest": "api/query.py" },
+    { "src": "/api/embed", "dest": "api/embed.py" },
     {
-      "src": "/(.*)",
+      "src": "/",
       "dest": "api/index.py"
     }
   ]
