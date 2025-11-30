@@ -7,11 +7,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from qdrant_client_logic import qdrant, COLLECTION_NAME, embed_text
 
-def handler(request):
+def handler(event, context):
     """Vercel serverless handler for /api/query - similarity search"""
     try:
         # Handle CORS preflight
-        if request.method == "OPTIONS":
+        if event.get("httpMethod") == "OPTIONS":
             return {
                 "statusCode": 200,
                 "headers": {
@@ -21,7 +21,7 @@ def handler(request):
                 },
             }
         
-        body = json.loads(request.body) if isinstance(request.body, str) else request.body
+        body = json.loads(event.get("body", "{}")) if isinstance(event.get("body", "{}"), str) else event.get("body", "{}")
         question = body.get("question", "")
         
         if not question:
@@ -75,7 +75,7 @@ def handler(request):
         }
 from qdrant_client_logic import embed_text, qdrant, COLLECTION_NAME
 
-def handler(request):
+def handler(event, context):
     body = request.json()
     question = body.get("question")
 

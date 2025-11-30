@@ -1,6 +1,6 @@
 import json
 
-def handler(request):
+def handler(event, context):
 	"""Vercel serverless handler for root endpoint - health check"""
 	return {
 		"statusCode": 200,

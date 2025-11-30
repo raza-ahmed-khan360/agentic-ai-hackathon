@@ -7,11 +7,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from qdrant_client_logic import embed_text
 
-def handler(request):
+def handler(event, context):
     """Vercel serverless handler for /api/embed - get embeddings"""
     try:
         # Handle CORS preflight
-        if request.method == "OPTIONS":
+        if event.get("httpMethod") == "OPTIONS":
             return {
                 "statusCode": 200,
                 "headers": {
@@ -21,7 +21,7 @@ def handler(request):
                 },
             }
         
-        body = json.loads(request.body) if isinstance(request.body, str) else request.body
+        body = json.loads(event.get("body", "{}")) if isinstance(event.get("body", "{}"), str) else event.get("body", "{}")
         text = body.get("text", "")
         
         if not text:
