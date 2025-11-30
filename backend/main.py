@@ -1,4 +1,5 @@
 import os
+import traceback
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,6 +41,9 @@ class PersonalizeRequest(BaseModel):
     text: str
     level: str 
 
+class TranslationRequest(BaseModel):
+    text: str
+
 @app.get("/")
 def home():
     return {"status": "Agentic AI Backend is Running"}
@@ -47,80 +51,99 @@ def home():
 # --- Personalization Endpoint ---
 @app.post("/personalize")
 def personalize_endpoint(request: PersonalizeRequest):
-    print(f"Personalizing for level: {request.level}")
-    
-    prompt_style = "Explain this like I'm 5 years old. Use simple analogies." if request.level == "simple" else "Explain this like a PhD researcher. Use technical jargon and deep theoretical context."
+    print(f"Personalizing...")
+    prompt_style = "Explain simply." if request.level == "simple" else "Explain deeply."
     
     try:
         completion = client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             messages=[
-                {"role": "system", "content": f"You are an expert tutor. {prompt_style} Keep Markdown formatting. Do not change code blocks."},
+                # UPDATED PROMPT: Request HTML
+                {"role": "system", "content": f"You are a tutor. {prompt_style} Return the response as valid HTML code (using <h1>, <p>, <ul>, etc). Do NOT use Markdown."},
                 {"role": "user", "content": request.text[:6000]}
             ]
         )
         return {"personalized_text": completion.choices[0].message.content}
     except Exception as e:
-        print(f"Error: {e}")
-        return {"personalized_text": "Failed to personalize. Check backend console."}
-
-# --- Translation Endpoint (From previous step) ---
-class TranslationRequest(BaseModel):
-    text: str
+        traceback.print_exc()
+        return {"personalized_text": "Error during personalization."}
 
 @app.post("/translate")
 def translate_endpoint(request: TranslationRequest):
+    print("Translating...")
     try:
         completion = client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             messages=[
-                {"role": "system", "content": "Translate Markdown to Urdu. Preserve formatting."},
+                # UPDATED PROMPT: Request HTML
+                {"role": "system", "content": "Translate to Urdu. Return the response as valid HTML code (using <h1>, <p>, <ul>, etc). Ensure RTL direction is respected. Do NOT use Markdown."},
                 {"role": "user", "content": request.text[:6000]}
             ]
         )
         return {"translated_text": completion.choices[0].message.content}
     except Exception as e:
-        return {"translated_text": "Translation failed."}
+        traceback.print_exc()
+        return {"translated_text": "Error during translation."}
 
 # --- Chat/RAG Endpoint ---
 @app.post("/chat")
 def chat_endpoint(question: Question):
-    print(f"User Question: {question.text}")
+    print(f"Chat Question: {question.text}")
     context = ""
     
-    # 1. RAG Retrieval
-    if question.selected_text and len(question.selected_text) > 10:
-        context = f"USER SELECTED TEXT:\n{question.selected_text}"
-    else:
+    # 1. Retrieval
+    if not question.selected_text:
         try:
-            # Embed using Gemini via OpenAI SDK
+            # Embed the question
             emb_response = client.embeddings.create(
                 input=question.text,
                 model="text-embedding-004"
             )
             embedding = emb_response.data[0].embedding
             
-            # Search Qdrant
+            # Search Qdrant with a LOWER threshold (or no threshold)
             search_result = qdrant.search(
                 collection_name=COLLECTION_NAME,
                 query_vector=embedding,
-                limit=3
+                limit=5  # Get MORE context (5 chunks instead of 3)
             )
+            
+            print(f"Found {len(search_result)} chunks.") # Debug print
+            
             for res in search_result:
+                # Add the text to the context
                 context += res.payload['text'] + "\n\n"
+                
         except Exception as e:
-            print(f"Search Error: {e}")
-            context = "No context found (Database might be empty)."
+            print(f"Retrieval Error: {e}")
+            context = "" # Fallback to empty context
+    else:
+        context = question.selected_text
 
-    # 2. Generation
+    # 2. Construction of the System Prompt
+    # This is the critical part. We tell the AI how to behave.
+    system_instruction = """
+    You are an expert Professor for the 'Physical AI & Humanoid Robotics' course.
+    Your goal is to help students understand the textbook.
+    
+    INSTRUCTIONS:
+    1. Use the provided [CONTEXT] to answer the user's question.
+    2. If the [CONTEXT] contains the answer, explain it clearly.
+    3. If the [CONTEXT] is empty or irrelevant, DO NOT say "I cannot answer". 
+       Instead, answer based on your general knowledge about Robotics, ROS 2, and AI, 
+       but mention: "This specific detail isn't in the current chapter context, but generally..."
+    """
+
+    # 3. Generation
     try:
         completion = client.chat.completions.create(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash", 
             messages=[
-                {"role": "system", "content": "You are a tutor for the Physical AI course. Answer based ONLY on the context provided."},
-                {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {question.text}"}
+                {"role": "system", "content": system_instruction},
+                {"role": "user", "content": f"[CONTEXT]:\n{context}\n\n[USER QUESTION]: {question.text}"}
             ]
         )
         return {"answer": completion.choices[0].message.content}
     except Exception as e:
-        return {"answer": "I encountered an error generating the response."}
+        traceback.print_exc()
+        return {"answer": "I encountered an error. Check terminal for details."}
