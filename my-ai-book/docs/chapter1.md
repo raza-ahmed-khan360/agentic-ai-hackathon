@@ -10,13 +10,6 @@ sidebar_label: Chapter 1 — The Robotic Nervous System (ROS 2)
 
 ## **1.1 From Digital to Physical: The Embodied Intelligence Gap**
 
-```md
----
-id: embodied-intelligence
-title: 1.1 From Digital to Physical
----
-```
-
 ### **The Embodied Intelligence Gap**
 
 Modern AI models excel in digital domains—text, images, audio, and structured reasoning. However, when the same intelligence is transferred to the physical world, a *gap* appears. This challenge is known as the **Embodied Intelligence Gap**.

@@ -10,13 +10,6 @@ sidebar_label: Chapter 2 — The Digital Twin (Gazebo Simulation)
 
 ## **2.1 Physics Simulation: Gravity, Collisions, and URDF**
 
-```md
----
-id: gazebo-physics
-title: 2.1 Physics Simulation
----
-```
-
 ### **Why Physics Simulation Matters**
 
 Before deploying to a real robot, we must test behaviours in a safe environment.
