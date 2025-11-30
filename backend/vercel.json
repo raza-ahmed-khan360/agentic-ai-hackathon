@@ -1,5 +1,12 @@
 {
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1.py" }
-  ]
+  "buildCommand": "pip install -r requirements.txt",
+  "devCommand": "uvicorn main:app --reload",
+  "env": {
+    "PYTHONUNBUFFERED": "1"
+  },
+  "functions": {
+    "main.py": {
+      "runtime": "python3.12"
+    }
+  }
 }

@@ -7,6 +7,13 @@ interface Message {
   content: string;
 }
 
+// --- BACKEND URL Configuration ---
+// Use environment variable if available, otherwise default to deployed Vercel backend
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+    ? 'http://127.0.0.1:8000' 
+    : 'https://agentic-ai-hackathon.vercel.app/api');
+
 export default function ChatWindow() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [messages, setMessages] = useState<Message[]>([
@@ -44,7 +51,7 @@ export default function ChatWindow() {
     const sourceText = originalContent ? new DOMParser().parseFromString(originalContent, 'text/html').body.innerText : contentDiv.innerText;
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/personalize', {
+      const response = await fetch(`${BACKEND_URL}/personalize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: sourceText, level: level })
@@ -69,7 +76,7 @@ export default function ChatWindow() {
     const sourceText = originalContent ? new DOMParser().parseFromString(originalContent, 'text/html').body.innerText : contentDiv.innerText;
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/translate', {
+      const response = await fetch(`${BACKEND_URL}/translate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: sourceText })
@@ -95,7 +102,7 @@ export default function ChatWindow() {
     setInput('');
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/chat', {
+      const response = await fetch(`${BACKEND_URL}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: currentInput })
